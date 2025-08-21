@@ -1,4 +1,4 @@
-# Streamlit Policy Chatbot
+# Financial Policy Chatbot
 
 A simple local chatbot for the provided financial policy PDF.
 
@@ -6,7 +6,7 @@ A simple local chatbot for the provided financial policy PDF.
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # or .venv\Scripts\Activate.ps1 on Windows
+.venv\Scripts\Activate.ps1 # on Windows
 pip install -r requirements.txt
 ```
 
@@ -29,8 +29,6 @@ Then open http://localhost:8501 in your browser.
 - Local PDF ingestion and chunking with page + section metadata.
 - Vector search via FAISS + Sentence-Transformers (fallback: TF-IDF).
 - Conversation memory: short/pronoun follow-ups are linked to prior topic.
-- Styled chat UI with user/bot bubbles.
-- Fallback message if no relevant section is found.
 
 ---
 
