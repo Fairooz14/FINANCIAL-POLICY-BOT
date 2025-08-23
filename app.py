@@ -26,25 +26,45 @@ if "chat" not in st.session_state:
 # Concise Answer Generator
 # ---------------------------
 def make_answer(query, hits):
+    # Fallback if nothing is retrieved
     if not hits:
-        return "I couldn't find that in the policy document."
+        return (
+            "I couldn't find that in the policy document. "
+            "Try asking about: budget, debt, capital infrastructure, taxation, net assets, or superannuation liabilities."
+        )
 
     # Take top 2 chunks
     texts = [h[1]["text"] for h in hits[:2]]
     combined = " ".join(texts)
 
-    # Split into sentences
+    # Break into sentences
     sentences = [s.strip() for s in combined.replace("\n", " ").split(". ") if len(s.split()) > 4]
 
-    # Score with TF-IDF
+    if not sentences:
+        return (
+            "I couldn't find a clear answer to that question in the document. "
+            "You may try rephrasing or asking about a main topic like budget, debt, taxation, or superannuation."
+        )
+
+    # Score sentences with TF-IDF against query
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import numpy as np
+
     vectorizer = TfidfVectorizer().fit([query] + sentences)
     query_vec = vectorizer.transform([query])
     sent_vecs = vectorizer.transform(sentences)
     sims = (sent_vecs @ query_vec.T).toarray().ravel()
 
-    # Select top 1–2 most relevant sentences
+    # Pick top 1–2 sentences
     top_idx = np.argsort(-sims)[:2]
-    best_sentences = [sentences[i] for i in top_idx]
+    best_sentences = [sentences[i] for i in top_idx if sims[i] > 0]
+
+    if not best_sentences:
+        return (
+            "I couldn't find an exact answer in the document. "
+            "Try asking about budget balance, debt, taxation as % of GSP, net assets, or superannuation targets."
+        )
+
     summary = " ".join(best_sentences).strip()
     if not summary.endswith("."):
         summary += "."
@@ -65,11 +85,10 @@ def make_answer(query, hits):
     else:
         answer = f"The policy states: {summary}"
 
-    # Add citation
+    # Add citation from first hit
     first_chunk = hits[0][1]
     answer += f"\n\n_Source: Section {first_chunk.get('section','N/A')}, Page {first_chunk.get('page','?')}_"
     return answer
-
 # ---------------------------
 # Chat Input
 # ---------------------------
